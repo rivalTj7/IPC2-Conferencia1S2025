@@ -1,0 +1,227 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Mi Perfil - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<section class="profile-header py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" class="profile-image" alt="{{ user.get_full_name }}">
+                {% else %}
+                    <img src="{% static 'img/user-placeholder.jpg' %}" class="profile-image" alt="{{ user.get_full_name }}">
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <h1 class="display-4">{{ user.get_full_name }}</h1>
+                <p class="lead">{{ user.job_title }}{% if user.organization %} en {{ user.organization }}{% endif %}</p>
+                
+                <div class="mt-3">
+                    <a href="{% url 'profile_update' %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Editar Perfil
+                    </a>
+                    <a href="{% url 'password_change' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-key me-2"></i>Cambiar Contraseña
+                    </a>
+                    {% if user.is_speaker %}
+                        <a href="{% url 'speaker_profile_update' %}" class="btn btn-info">
+                            <i class="fas fa-microphone me-2"></i>Editar Perfil de Ponente
+                        </a>
+                    {% else %}
+                        <a href="{% url 'speaker_profile_create' %}" class="btn btn-outline-info">
+                            <i class="fas fa-microphone-alt me-2"></i>Convertirse en Ponente
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Profile Info -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- General Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Información Personal</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Nombre completo</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.get_full_name }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Nombre de usuario</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.username }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Email</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.email }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Teléfono</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.phone_number|default:"No especificado" }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Organización</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.organization|default:"No especificado" }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Cargo</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.job_title|default:"No especificado" }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <strong>Biografía</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.bio|linebreaks|default:"No hay biografía disponible." }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Account Information -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Información de la cuenta</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Fecha de registro</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.date_joined|date:"j F, Y" }}
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-sm-3">
+                                <strong>Última actualización</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {{ user.date_modified|date:"j F, Y" }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-3">
+                                <strong>Notificaciones</strong>
+                            </div>
+                            <div class="col-sm-9">
+                                {% if user.receive_email_notifications %}
+                                    <span class="text-success"><i class="fas fa-check-circle me-2"></i>Activadas</span>
+                                {% else %}
+                                    <span class="text-danger"><i class="fas fa-times-circle me-2"></i>Desactivadas</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Upcoming Events -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Mis Próximos Eventos</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if upcoming_events %}
+                            <ul class="list-group list-group-flush">
+                                {% for registration in upcoming_events %}
+                                    <li class="list-group-item">
+                                        <a href="{% url 'event_detail' registration.event.slug %}">{{ registration.event.title }}</a>
+                                        <p class="text-muted mb-0">
+                                            <small>
+                                                <i class="far fa-calendar-alt me-1"></i> {{ registration.event.start_date|date:"j F, Y" }}
+                                            </small>
+                                        </p>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <div class="alert alert-info">
+                                No tienes eventos próximos.
+                            </div>
+                        {% endif %}
+                        <div class="mt-3">
+                            <a href="{% url 'user_registrations' %}" class="btn btn-outline-primary btn-sm w-100">
+                                Ver todas mis inscripciones
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- If User is Speaker -->
+                {% if user.is_speaker %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Mis Próximas Sesiones</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if upcoming_sessions %}
+                                <ul class="list-group list-group-flush">
+                                    {% for session in upcoming_sessions %}
+                                        <li class="list-group-item">
+                                            <a href="{% url 'session_detail' session.id %}">{{ session.title }}</a>
+                                            <p class="text-muted mb-0">
+                                                <small>
+                                                    <i class="far fa-calendar-alt me-1"></i> {{ session.start_time|date:"j F, Y" }}
+                                                </small>
+                                            </p>
+                                            <p class="text-muted mb-0">
+                                                <small>
+                                                    <i class="fas fa-map-marker-alt me-1"></i> {{ session.event.title }}
+                                                </small>
+                                            </p>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="alert alert-info">
+                                    No tienes sesiones programadas próximamente.
+                                </div>
+                            {% endif %}
+                            <div class="mt-3">
+                                <a href="{% url 'speaker_detail' user.speaker_profile.pk %}" class="btn btn-outline-primary btn-sm w-100">
+                                    Ver mi perfil de ponente
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

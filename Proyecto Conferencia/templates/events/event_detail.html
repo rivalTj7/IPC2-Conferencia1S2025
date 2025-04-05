@@ -1,0 +1,209 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ event.title }} - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<!-- Event Header -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'event_list' %}">Eventos</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ event.title }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-4 mb-3">{{ event.title }}</h1>
+                <div class="d-flex flex-wrap gap-3 mb-3">
+                    {% if event.category %}
+                    <span class="badge bg-primary">{{ event.category.name }}</span>
+                    {% endif %}
+                    <span class="badge bg-secondary">
+                        <i class="far fa-calendar-alt me-1"></i> {{ event.start_date|date:"j F, Y" }}
+                    </span>
+                    {% if event.is_featured %}
+                    <span class="badge bg-warning">Destacado</span>
+                    {% endif %}
+                </div>
+                <p class="lead">{{ event.description|linebreaks }}</p>
+                
+                <!-- Registration Status -->
+                <div class="mt-4">
+                    {% if user.is_authenticated %}
+                        {% if user_registered %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i> Estás registrado para este evento.
+                            </div>
+                        {% else %}
+                            {% if event.registration_required %}
+                                {% if event.available_spots == 0 %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle me-2"></i> Este evento está completo.
+                                    </div>
+                                {% else %}
+                                    <a href="{% url 'event_register' event.slug %}" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-ticket-alt me-2"></i> Registrarse
+                                    </a>
+                                    {% if event.available_spots %}
+                                        <small class="text-muted ms-3">
+                                            {{ event.available_spots }} plazas disponibles
+                                        </small>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> Debes <a href="{% url 'login' %}?next={{ request.path }}">iniciar sesión</a> para registrarte en este evento.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    {% if event.image %}
+                        <img src="{{ event.image.url }}" class="card-img-top" alt="{{ event.title }}">
+                    {% else %}
+                        <img src="{% static 'img/event-placeholder.jpg' %}" class="card-img-top" alt="{{ event.title }}">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">Detalles</h5>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item">
+                                <i class="far fa-calendar-alt me-2"></i> <strong>Inicia:</strong> {{ event.start_date|date:"j F, Y - H:i" }}
+                            </li>
+                            <li class="list-group-item">
+                                <i class="far fa-calendar-check me-2"></i> <strong>Finaliza:</strong> {{ event.end_date|date:"j F, Y - H:i" }}
+                            </li>
+                            {% if event.location %}
+                            <li class="list-group-item">
+                                <i class="fas fa-map-marker-alt me-2"></i> <strong>Ubicación:</strong> {{ event.location.name }}, {{ event.location.city }}
+                            </li>
+                            {% endif %}
+                            {% if event.organizer %}
+                            <li class="list-group-item">
+                                <i class="fas fa-user-tie me-2"></i> <strong>Organizador:</strong> {{ event.organizer.get_full_name }}
+                            </li>
+                            {% endif %}
+                            <li class="list-group-item">
+                                <i class="fas fa-users me-2"></i> <strong>Registrados:</strong> {{ event.registered_count }}
+                                {% if event.max_attendees %}
+                                 / {{ event.max_attendees }}
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    {% if event.start_date > now %}
+                    <div class="card-footer">
+                        <p class="mb-1"><strong>Cuenta regresiva:</strong></p>
+                        <div class="text-center fs-5 fw-bold" data-countdown="{{ event.start_date|date:'Y-m-d H:i:s' }}">
+                            Cargando...
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Event Sessions -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Agenda</h2>
+        
+        {% if sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Sesión</th>
+                            <th>Sala</th>
+                            <th>Ponentes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in sessions %}
+                            <tr>
+                                <td>
+                                    {{ session.start_time|date:"j M, Y" }}<br>
+                                    <small>{{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    <a href="{% url 'session_detail' session.id %}">{{ session.title }}</a>
+                                    <p class="small text-muted mb-0">{{ session.description|truncatechars:100 }}</p>
+                                </td>
+                                <td>{{ session.room }}</td>
+                                <td>
+                                    {% for speaker in session.speakers.all %}
+                                        <a href="{% url 'speaker_detail' speaker.speaker_profile.pk %}">{{ speaker.get_full_name }}</a>{% if not forloop.last %}, {% endif %}
+                                    {% empty %}
+                                        <span class="text-muted">Por confirmar</span>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                La agenda de este evento aún no está disponible.
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Related Events -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Eventos relacionados</h2>
+        
+        {% if related_events %}
+            <div class="row">
+                {% for related_event in related_events %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card event-card h-100">
+                            {% if related_event.image %}
+                                <img src="{{ related_event.image.url }}" class="card-img-top event-image" alt="{{ related_event.title }}">
+                            {% else %}
+                                <img src="{% static 'img/event-placeholder.jpg' %}" class="card-img-top event-image" alt="{{ related_event.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ related_event.title }}</h5>
+                                <p class="card-text event-date">
+                                    <i class="far fa-calendar-alt me-2"></i>{{ related_event.start_date|date:"j F, Y" }}
+                                </p>
+                                <p class="card-text">{{ related_event.description|truncatewords:10 }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{% url 'event_detail' related_event.slug %}" class="btn btn-outline-primary">Ver detalles</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                No hay eventos relacionados disponibles.
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Código JavaScript adicional específico para esta página
+    document.addEventListener('DOMContentLoaded', function() {
+        // Si hay un elemento de cuenta regresiva, inicializar
+        if (document.querySelector('[data-countdown]')) {
+            // La funcionalidad ya está en main.js
+        }
+    });
+</script>
+{% endblock %}

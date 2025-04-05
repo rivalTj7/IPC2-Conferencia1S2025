@@ -1,0 +1,97 @@
+{% extends 'base/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Registro para {{ event.title }} - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'event_list' %}">Eventos</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'event_detail' event.slug %}">{{ event.title }}</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Registro</li>
+                    </ol>
+                </nav>
+
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Registro para el Evento</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h4>{{ event.title }}</h4>
+                            <p class="text-muted">
+                                <i class="far fa-calendar-alt me-2"></i> {{ event.start_date|date:"j F, Y - H:i" }} a {{ event.end_date|date:"j F, Y - H:i" }}
+                            </p>
+                            {% if event.location %}
+                                <p class="text-muted">
+                                    <i class="fas fa-map-marker-alt me-2"></i> {{ event.location.name }}, {{ event.location.city }}
+                                </p>
+                            {% endif %}
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i> Estás a punto de registrarte para este evento. Por favor, completa la siguiente información.
+                            </div>
+                            
+                            {{ form|crispy }}
+                            
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" value="" id="termsCheck" required>
+                                <label class="form-check-label" for="termsCheck">
+                                    Acepto los <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">términos y condiciones</a> de participación en este evento.
+                                </label>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'event_detail' event.slug %}" class="btn btn-secondary">
+                                    <i class="fas fa-arrow-left me-2"></i>Volver
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-check-circle me-2"></i>Confirmar Registro
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Terms Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Términos y Condiciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5>Términos de Participación</h5>
+                <p>Al registrarte, aceptas los siguientes términos y condiciones:</p>
+                <ol>
+                    <li>La información proporcionada es correcta y verídica.</li>
+                    <li>Cumplirás con las normas de conducta del evento.</li>
+                    <li>Entiendes que tu asistencia puede ser documentada con fotografías o videos.</li>
+                    <li>Si no puedes asistir, cancelarás tu registro con al menos 48 horas de anticipación.</li>
+                    <li>Los organizadores pueden modificar el programa o cancelar el evento si es necesario.</li>
+                </ol>
+                
+                <h5>Política de Privacidad</h5>
+                <p>La información proporcionada será utilizada únicamente para los fines del evento y no será compartida con terceros sin tu consentimiento.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendido</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

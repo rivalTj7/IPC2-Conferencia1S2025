@@ -1,0 +1,217 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Inicio - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-title">Sistema de Gestión de Conferencias</h1>
+                <p class="hero-subtitle">La plataforma perfecta para organizar y gestionar tus eventos y conferencias.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{% url 'event_list' %}" class="btn btn-light btn-lg">
+                        <i class="fas fa-calendar-alt me-2"></i>Ver Eventos
+                    </a>
+                    <a href="{% url 'speaker_list' %}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-microphone me-2"></i>Conoce a los Ponentes
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{% static 'img/conference.svg' %}" alt="Conferencia" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Eventos Destacados -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Eventos Destacados</h2>
+        <div class="row">
+            {% if featured_events %}
+                {% for event in featured_events %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card event-card h-100">
+                            {% if event.image %}
+                                <img src="{{ event.image.url }}" class="card-img-top event-image" alt="{{ event.title }}">
+                            {% else %}
+                                <img src="{% static 'img/event-placeholder.jpg' %}" class="card-img-top event-image" alt="{{ event.title }}">
+                            {% endif %}
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                <p class="card-text event-date">
+                                    <i class="far fa-calendar-alt me-2"></i>{{ event.start_date|date:"j F, Y" }}
+                                </p>
+                                <p class="card-text event-location">
+                                    <i class="fas fa-map-marker-alt me-2"></i>{{ event.location|default:"Online" }}
+                                </p>
+                                <p class="card-text">{{ event.description|truncatewords:20 }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0">
+                                <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary">Ver Detalles</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No hay eventos destacados en este momento.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'event_list' %}" class="btn btn-outline-primary">
+                Ver Todos los Eventos <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Próximos Eventos -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Próximos Eventos</h2>
+        <div class="row">
+            {% if upcoming_events %}
+                {% for event in upcoming_events %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card event-card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ event.title }}</h5>
+                                <p class="card-text event-date">
+                                    <i class="far fa-calendar-alt me-2"></i>{{ event.start_date|date:"j F, Y" }}
+                                </p>
+                                <p class="card-text event-location">
+                                    <i class="fas fa-map-marker-alt me-2"></i>{{ event.location|default:"Online" }}
+                                </p>
+                                <p class="card-text">{{ event.description|truncatewords:15 }}</p>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0">
+                                <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No hay próximos eventos en este momento.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Ponentes Destacados -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Ponentes Destacados</h2>
+        <div class="row">
+            {% if featured_speakers %}
+                {% for speaker in featured_speakers %}
+                    <div class="col-md-3 mb-4 text-center">
+                        <div class="card speaker-card h-100">
+                            <div class="card-body">
+                                {% if speaker.user.profile_picture %}
+                                    <img src="{{ speaker.user.profile_picture.url }}" class="speaker-image mb-3" alt="{{ speaker.user.get_full_name }}">
+                                {% else %}
+                                    <img src="{% static 'img/speaker-placeholder.jpg' %}" class="speaker-image mb-3" alt="{{ speaker.user.get_full_name }}">
+                                {% endif %}
+                                <h5 class="card-title">{{ speaker.user.get_full_name }}</h5>
+                                <p class="text-muted">{{ speaker.headline }}</p>
+                                <div class="social-links mt-3">
+                                    {% if speaker.linkedin_url %}
+                                        <a href="{{ speaker.linkedin_url }}" target="_blank" class="text-primary me-2">
+                                            <i class="fab fa-linkedin fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if speaker.twitter_handle %}
+                                        <a href="https://twitter.com/{{ speaker.twitter_handle }}" target="_blank" class="text-info me-2">
+                                            <i class="fab fa-twitter fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if speaker.github_username %}
+                                        <a href="https://github.com/{{ speaker.github_username }}" target="_blank" class="text-dark me-2">
+                                            <i class="fab fa-github fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-top-0">
+                                <a href="{% url 'speaker_detail' speaker.pk %}" class="btn btn-sm btn-outline-primary">Ver Perfil</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No hay ponentes destacados en este momento.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'speaker_list' %}" class="btn btn-outline-primary">
+                Ver Todos los Ponentes <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Patrocinadores -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Nuestros Patrocinadores</h2>
+        <div class="row justify-content-center">
+            {% if sponsors %}
+                {% for sponsor in sponsors %}
+                    <div class="col-6 col-md-3 col-lg-2 mb-4 text-center sponsor-card">
+                        <a href="{{ sponsor.website }}" target="_blank" title="{{ sponsor.name }}">
+                            <img src="{{ sponsor.logo.url }}" alt="{{ sponsor.name }}" class="sponsor-logo">
+                        </a>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No hay patrocinadores en este momento.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        <div class="text-center mt-4">
+            <a href="{% url 'sponsors' %}" class="btn btn-outline-primary">
+                Ver Todos los Patrocinadores <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h2>¿Listo para unirte a nuestros eventos?</h2>
+                <p class="lead">Regístrate ahora y forma parte de nuestra comunidad.</p>
+                <div class="d-flex justify-content-center gap-3 mt-4">
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                    </a>
+                    <a href="{% url 'contact' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-envelope me-2"></i>Contacto
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

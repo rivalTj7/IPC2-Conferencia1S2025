@@ -1,0 +1,233 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}{{ speaker.user.get_full_name }} - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<!-- Speaker Header -->
+<section class="profile-header py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if speaker.user.profile_picture %}
+                    <img src="{{ speaker.user.profile_picture.url }}" class="profile-image" alt="{{ speaker.user.get_full_name }}">
+                {% else %}
+                    <img src="{% static 'img/speaker-placeholder.jpg' %}" class="profile-image" alt="{{ speaker.user.get_full_name }}">
+                {% endif %}
+            </div>
+            <div class="col-md-9">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{% url 'home' %}">Inicio</a></li>
+                        <li class="breadcrumb-item"><a href="{% url 'speaker_list' %}">Ponentes</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ speaker.user.get_full_name }}</li>
+                    </ol>
+                </nav>
+                <h1 class="display-4">{{ speaker.user.get_full_name }}</h1>
+                <p class="lead">{{ speaker.headline }}</p>
+                
+                <div class="mb-3">
+                    {% for specialization in speaker.specializations.all %}
+                        <a href="{% url 'specialization_detail' specialization.slug %}" class="badge bg-secondary text-decoration-none">{{ specialization.name }}</a>
+                    {% endfor %}
+                </div>
+                
+                <div class="social-links mb-3">
+                    {% if speaker.linkedin_url %}
+                        <a href="{{ speaker.linkedin_url }}" target="_blank" class="btn btn-outline-primary btn-sm me-2">
+                            <i class="fab fa-linkedin me-1"></i> LinkedIn
+                        </a>
+                    {% endif %}
+                    {% if speaker.twitter_handle %}
+                        <a href="https://twitter.com/{{ speaker.twitter_handle }}" target="_blank" class="btn btn-outline-info btn-sm me-2">
+                            <i class="fab fa-twitter me-1"></i> Twitter
+                        </a>
+                    {% endif %}
+                    {% if speaker.github_username %}
+                        <a href="https://github.com/{{ speaker.github_username }}" target="_blank" class="btn btn-outline-dark btn-sm me-2">
+                            <i class="fab fa-github me-1"></i> GitHub
+                        </a>
+                    {% endif %}
+                    {% if speaker.website %}
+                        <a href="{{ speaker.website }}" target="_blank" class="btn btn-outline-success btn-sm me-2">
+                            <i class="fas fa-globe me-1"></i> Sitio Web
+                        </a>
+                    {% endif %}
+                </div>
+                
+                {% if user.is_authenticated and user == speaker.user %}
+                    <a href="{% url 'speaker_profile_update' %}" class="btn btn-primary">
+                        <i class="fas fa-edit me-1"></i> Editar Perfil
+                    </a>
+                    <a href="{% url 'presentation_create' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-plus me-1"></i> Añadir Presentación
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Speaker Bio -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Biografía</h2>
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        {{ speaker.bio_extended|linebreaks|default:"No hay biografía disponible." }}
+                    </div>
+                </div>
+                
+                <!-- Speaking Experience -->
+                {% if speaker.speaking_experience %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Experiencia como Ponente</h5>
+                        </div>
+                        <div class="card-body">
+                            {{ speaker.speaking_experience|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Presentation Topics -->
+                {% if speaker.presentation_topics %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Temas de Presentación</h5>
+                        </div>
+                        <div class="card-body">
+                            {{ speaker.presentation_topics|linebreaks }}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Speaker Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Información</h5>
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        {% if speaker.user.organization %}
+                            <li class="list-group-item">
+                                <i class="fas fa-building me-2"></i> <strong>Organización:</strong> {{ speaker.user.organization }}
+                            </li>
+                        {% endif %}
+                        {% if speaker.user.job_title %}
+                            <li class="list-group-item">
+                                <i class="fas fa-briefcase me-2"></i> <strong>Cargo:</strong> {{ speaker.user.job_title }}
+                            </li>
+                        {% endif %}
+                        {% if speaker.languages %}
+                            <li class="list-group-item">
+                                <i class="fas fa-language me-2"></i> <strong>Idiomas:</strong> {{ speaker.languages }}
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Past Presentations -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title">Presentaciones Anteriores</h2>
+        
+        {% if presentations %}
+            <div class="row">
+                {% for presentation in presentations %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title">{{ presentation.title }}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{ presentation.event_name }}</h6>
+                                <p class="card-text">
+                                    <i class="far fa-calendar-alt me-2"></i> {{ presentation.date|date:"j F, Y" }}
+                                </p>
+                                <p class="card-text">{{ presentation.description|default:"Sin descripción disponible." }}</p>
+                                <div class="mt-3">
+                                    {% if presentation.video_url %}
+                                        <a href="{{ presentation.video_url }}" target="_blank" class="btn btn-sm btn-outline-danger me-2">
+                                            <i class="fab fa-youtube me-1"></i> Ver Video
+                                        </a>
+                                    {% endif %}
+                                    {% if presentation.slides_url %}
+                                        <a href="{{ presentation.slides_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-file-powerpoint me-1"></i> Ver Slides
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            {% if user.is_authenticated and user == speaker.user %}
+                                <div class="card-footer bg-transparent">
+                                    <a href="{% url 'presentation_update' presentation.pk %}" class="btn btn-sm btn-outline-secondary me-2">
+                                        <i class="fas fa-edit me-1"></i> Editar
+                                    </a>
+                                    <a href="{% url 'presentation_delete' presentation.pk %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Este ponente aún no ha registrado presentaciones anteriores.
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Upcoming Sessions -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Próximas Sesiones</h2>
+        
+        {% if upcoming_sessions %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Evento</th>
+                            <th>Sesión</th>
+                            <th>Sala</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for session in upcoming_sessions %}
+                            <tr>
+                                <td>
+                                    {{ session.start_time|date:"j M, Y" }}<br>
+                                    <small>{{ session.start_time|date:"H:i" }} - {{ session.end_time|date:"H:i" }}</small>
+                                </td>
+                                <td>
+                                    <a href="{% url 'event_detail' session.event.slug %}">{{ session.event.title }}</a>
+                                </td>
+                                <td>
+                                    <a href="{% url 'session_detail' session.id %}">{{ session.title }}</a>
+                                    <p class="small text-muted mb-0">{{ session.description|truncatechars:100 }}</p>
+                                </td>
+                                <td>{{ session.room }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                Este ponente no tiene sesiones programadas próximamente.
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

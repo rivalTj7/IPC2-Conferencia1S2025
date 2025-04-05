@@ -1,0 +1,177 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}Ponentes - Sistema de Gestión de Conferencias{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<section class="bg-light py-5">
+    <div class="container">
+        <h1 class="display-4">Ponentes</h1>
+        <p class="lead">Conoce a los expertos que participan en nuestras conferencias.</p>
+    </div>
+</section>
+
+<!-- Search Section -->
+<section class="py-4">
+    <div class="container">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Buscar Ponentes</h5>
+                <form method="get" action="{% url 'speaker_list' %}" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="keyword" class="form-label">Palabra clave</label>
+                        <input type="text" class="form-control" id="keyword" name="keyword" value="{{ request.GET.keyword|default:'' }}" placeholder="Buscar por nombre o bio">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="specialization" class="form-label">Especialización</label>
+                        <select class="form-select" id="specialization" name="specialization">
+                            <option value="">Todas las especializaciones</option>
+                            {% for spec in specializations %}
+                                <option value="{{ spec.id }}" {% if request.GET.specialization == spec.id|stringformat:"i" %}selected{% endif %}>{{ spec.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Specializations Section -->
+<section class="py-2">
+    <div class="container">
+        <div class="d-flex flex-wrap gap-2 justify-content-center">
+            <a href="{% url 'speaker_list' %}" class="btn {% if not request.GET.specialization %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                Todos
+            </a>
+            {% for spec in specializations %}
+                <a href="{% url 'specialization_detail' spec.slug %}" class="btn {% if request.GET.specialization == spec.id|stringformat:'i' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ spec.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Speakers List -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="section-title">Nuestros Ponentes</h2>
+        <div class="row">
+            {% if speakers %}
+                {% for speaker in speakers %}
+                    <div class="col-md-3 mb-4">
+                        <div class="card speaker-card h-100 text-center">
+                            <div class="card-body">
+                                {% if speaker.user.profile_picture %}
+                                    <img src="{{ speaker.user.profile_picture.url }}" class="speaker-image mb-3" alt="{{ speaker.user.get_full_name }}">
+                                {% else %}
+                                    <img src="{% static 'img/speaker-placeholder.jpg' %}" class="speaker-image mb-3" alt="{{ speaker.user.get_full_name }}">
+                                {% endif %}
+                                <h5 class="card-title">{{ speaker.user.get_full_name }}</h5>
+                                <p class="text-muted">{{ speaker.headline }}</p>
+                                
+                                <div class="mb-3">
+                                    {% for specialization in speaker.specializations.all %}
+                                        <span class="badge bg-secondary">{{ specialization.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div class="social-links mb-3">
+                                    {% if speaker.linkedin_url %}
+                                        <a href="{{ speaker.linkedin_url }}" target="_blank" class="text-primary me-2">
+                                            <i class="fab fa-linkedin fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if speaker.twitter_handle %}
+                                        <a href="https://twitter.com/{{ speaker.twitter_handle }}" target="_blank" class="text-info me-2">
+                                            <i class="fab fa-twitter fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if speaker.github_username %}
+                                        <a href="https://github.com/{{ speaker.github_username }}" target="_blank" class="text-dark me-2">
+                                            <i class="fab fa-github fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if speaker.website %}
+                                        <a href="{{ speaker.website }}" target="_blank" class="text-success me-2">
+                                            <i class="fas fa-globe fa-lg"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <a href="{% url 'speaker_detail' speaker.pk %}" class="btn btn-outline-primary">Ver Perfil</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No se encontraron ponentes que coincidan con tu búsqueda.
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if speakers.paginator.num_pages > 1 %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if speakers.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">Primera</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ speakers.previous_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">Anterior</a>
+                    </li>
+                {% endif %}
+                
+                {% for num in speakers.paginator.page_range %}
+                    {% if speakers.number == num %}
+                        <li class="page-item active">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% elif num > speakers.number|add:'-3' and num < speakers.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if speakers.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ speakers.next_page_number }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">Siguiente</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ speakers.paginator.num_pages }}{% if request.GET.keyword %}&keyword={{ request.GET.keyword }}{% endif %}{% if request.GET.specialization %}&specialization={{ request.GET.specialization }}{% endif %}">Última</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Become a Speaker CTA -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h2>¿Quieres ser ponente?</h2>
+                <p class="lead mb-4">Si eres experto en algún tema y te gustaría compartir tus conocimientos, ¡únete como ponente!</p>
+                <a href="{% url 'speaker_profile_create' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-microphone me-2"></i> Convertirse en Ponente
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
